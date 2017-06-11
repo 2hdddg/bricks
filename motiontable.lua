@@ -19,7 +19,7 @@ local function sine_table(n)
     return table
 end
 
-function newCursor(size, initial, cycle_time)
+local function newCursor(size, initial, cycle_time)
     local _aggr_time = 0
     local _size = size
     local _entry_time = cycle_time / _size
@@ -32,12 +32,22 @@ function newCursor(size, initial, cycle_time)
         return floor((_aggr_time / _entry_time) % _size)
     end
 
+    local delayed = function(delay)
+        if delay < _aggr_time then
+            local passed = _aggr_time - delay
+            return floor((passed / _entry_time) % _size)
+        else
+            return 0
+        end
+    end
+
     return {
-        update = update
+        update = update,
+        delayed = delayed,
     }
 end
 
 return {
-    sine_table = sine_table,
+    genSineTable = sine_table,
     newCursor = newCursor,
 }
