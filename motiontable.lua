@@ -7,7 +7,7 @@ local floor = math.floor
 -- No more external access
 setfenv(1, {})
 
-local function sine_table(n)
+local function sine_table(n, f)
     local step = pi / n
     local table = {}
 
@@ -47,7 +47,27 @@ local function newCursor(size, initial, cycle_time)
     }
 end
 
+local function newCursor2(table, cycle_time)
+    local me = {}
+    local size = #table
+    local entry_time = cycle_time / size
+    local aggr_time = 0
+
+    me.update = function(dt)
+        aggr_time = aggr_time + dt
+        local i = floor((aggr_time / entry_time) % size)
+        return table[i]
+    end
+
+    me.done = function()
+        return aggr_time > cycle_time
+    end
+
+    return me
+end
+
 return {
     genSineTable = sine_table,
     newCursor = newCursor,
+    newCursor2 = newCursor2,
 }

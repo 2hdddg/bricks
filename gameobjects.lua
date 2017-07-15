@@ -212,11 +212,11 @@ export.newBat = function(world, x, H, ball)
     return me
 end
 
-export.newWalls = function(world, W, H)
+export.newWalls = function(world, W, H, shaker)
     local walls = {}
     local hitWallSound = audio.newSource('hitwall.wav', 'static')
 
-    local function newWall(x, y, cx, cy, vx, vy)
+    local function newWall(x, y, cx, cy, vx, vy, shake)
         local wall = { name = 'wall' }
         local body, shape, fixture
 
@@ -231,8 +231,10 @@ export.newWalls = function(world, W, H)
             if other.name == 'ball' then
                 hitWallSound:play()
                 other.boost(vx, vy)
+                shake()
             elseif other.name == 'bat' then
                 hitWallSound:play()
+                shake()
             end
         end
 
@@ -258,9 +260,9 @@ export.newWalls = function(world, W, H)
         walls.right.drawShape()
     end
 
-    walls.left = newWall(2, H / 2, 5, H, 0, 80)
-    walls.top = newWall(W / 2, 2, W, 5, 20, 0)
-    walls.right = newWall(W - 2, H / 2, 5, H, 0, 80)
+    walls.left = newWall(2, H / 2, 5, H, 0, 80, shaker.left)
+    walls.top = newWall(W / 2, 2, W, 5, 20, 0, shaker.up)
+    walls.right = newWall(W - 2, H / 2, 5, H, 0, 80, shaker.right)
     walls.draw = draw
     walls.drawShape = drawShape
 

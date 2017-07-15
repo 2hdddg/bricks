@@ -8,7 +8,7 @@ setfenv(1, {})
 
 local export = {}
 
-export.newGame = function(state, W, H)
+export.newGame = function(state, W, H, shaker)
     local world
     local ball, bat, walls, bricks, void
 
@@ -56,7 +56,7 @@ export.newGame = function(state, W, H)
     world = physics.newWorld(0, 0, true)
     ball = objects.newBall(world, W / 2, (H / 4) * 3)
     bat  = objects.newBat(world, W / 2, H, ball)
-    walls = objects.newWalls(world, W, H)
+    walls = objects.newWalls(world, W, H, shaker)
     void = objects.newVoid(world, W / 2, H - 2, W, 5, lostBall)
     bricks = objects.newBricks(world, state, allDestroyed)
 

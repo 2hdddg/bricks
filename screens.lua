@@ -10,6 +10,7 @@ local print = print
 local sprites = require 'sprites'
 local game = require 'game'
 local gameboard = require 'gameboard'
+local table = table
 
 -- No more external access
 setfenv(1, {})
@@ -19,7 +20,7 @@ local export = {}
 
 export.newMainMenuScreen = function(onGame)
     local _table_size = 100
-    local _table = motiontable.genSineTable(_table_size)
+    local _table = motiontable.genSineTable(_table_size, 1)
     local _cursor = motiontable.newCursor(_table_size, 0, 2)
     local _index = 0
     local _blink = 0
@@ -103,10 +104,70 @@ export.newMainMenuScreen = function(onGame)
     }
 end
 
+local function newShaker (t)
+    local me = {}
+
+    -- Two tables for shaking to right or left
+    local lTable = motiontable.genSineTable(20, 1)
+    local rTable = motiontable.genSineTable(20, -1)
+    local hCursors = {}
+    local vCursors = {}
+
+    me.right = function()
+        local cursor = motiontable.newCursor2(rTable, t)
+
+        table.insert(hCursors, cursor)
+    end
+
+    me.left = function()
+        local cursor = motiontable.newCursor2(lTable, t)
+
+        table.insert(hCursors, cursor)
+    end
+
+    me.up = function()
+        local cursor = motiontable.newCursor2(lTable, t)
+
+        table.insert(vCursors, cursor)
+    end
+
+    local function update(cursors, dt)
+        local v = 0
+        local deletes = {}
+
+        for i = 1, #cursors do
+            local cursor = cursors[i]
+
+            v = v + cursor.update(dt)
+            if cursor.done() then
+                table.insert(deletes, i)
+            end
+        end
+
+        for i = 1, #deletes do
+            table.remove(cursors, deletes[i])
+        end
+
+        return v
+    end
+
+    me.update = function(dt)
+        return {
+            x = update(hCursors, dt),
+            y = update(vCursors, dt),
+        }
+    end
+
+    return me
+end
+
 export.newGameScreen = function(state, onPause, W, H)
 
+    local shake
+    local shaker = newShaker(0.2)
     local board = gameboard.newGameBoard(state, W, 20)
-    local game = game.newGame(state, W, H - 20)
+    local game = game.newGame(state, W, H - 20, shaker)
+
 
     local keyreleased = function (key)
         if key == 'escape' then
@@ -127,18 +188,20 @@ export.newGameScreen = function(state, onPause, W, H)
     end
 
     local draw = function()
+
         graphics.push()
         graphics.translate(0, 0)
         board.draw()
         graphics.pop()
 
         graphics.push()
-        graphics.translate(0, 20)
+        graphics.translate(0 + (shake.x * 10), 20 + (shake.y * 10))
         game.draw()
         graphics.pop()
     end
 
     local update = function(dt)
+        shake = shaker.update(dt)
         game.update(dt)
     end
 
